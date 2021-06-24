@@ -1,27 +1,27 @@
 {
-  "_from": "three@0.129.0",
-  "_id": "three@0.129.0",
+  "_from": "three@0.108.0",
+  "_id": "three@0.108.0",
   "_inBundle": false,
-  "_integrity": "sha512-wiWio1yVRg2Oj6WEWsTHQo5eSzYpEwSBtPSi3OofNpvFbf26HFfb9kw4FZJNjII4qxzp0b1xLB11+tKkBGB1ZA==",
+  "_integrity": "sha512-d1ysIXwi8qTlbmMwrTxi5pYiiYIflEr0e48krP0LAY8ndS8c6fkLHn6NvRT+o76/Fs9PBLxFViuI62iGVWwwlg==",
   "_location": "/three",
   "_phantomChildren": {},
   "_requested": {
     "type": "version",
     "registry": true,
-    "raw": "three@0.129.0",
+    "raw": "three@0.108.0",
     "name": "three",
     "escapedName": "three",
-    "rawSpec": "0.129.0",
+    "rawSpec": "0.108.0",
     "saveSpec": null,
-    "fetchSpec": "0.129.0"
+    "fetchSpec": "0.108.0"
   },
   "_requiredBy": [
     "#DEV:/"
   ],
-  "_resolved": "https://registry.npmjs.org/three/-/three-0.129.0.tgz",
-  "_shasum": "f5e530bbc96eac5d5b4749cb5da886ef0d42f554",
-  "_spec": "three@0.129.0",
-  "_where": "D:\\www\\小程序\\threejs-miniprogram",
+  "_resolved": "https://registry.npmjs.org/three/-/three-0.108.0.tgz",
+  "_shasum": "53d26597c7932f214bb43f4655e566d2058143b5",
+  "_spec": "three@0.108.0",
+  "_where": "D:\\www\\小程序\\摇骰子小游戏-校验版\\threejs-miniprogram",
   "author": {
     "name": "mrdoob"
   },
@@ -32,23 +32,18 @@
   "deprecated": false,
   "description": "JavaScript 3D library",
   "devDependencies": {
-    "@babel/core": "^7.14.3",
-    "@babel/eslint-parser": "^7.14.3",
-    "@babel/plugin-proposal-class-properties": "^7.13.0",
-    "@babel/preset-env": "^7.14.2",
-    "@rollup/plugin-babel": "^5.3.0",
-    "@rollup/plugin-node-resolve": "^13.0.0",
-    "chalk": "^4.1.1",
-    "concurrently": "^6.1.0",
-    "eslint": "^7.26.0",
-    "eslint-config-mdcs": "^5.0.0",
-    "eslint-plugin-html": "^6.1.2",
-    "glob": "^7.1.7",
-    "rollup": "^2.48.0",
-    "rollup-plugin-filesize": "^9.1.1",
-    "rollup-plugin-terser": "^7.0.2",
-    "rollup-plugin-visualizer": "^5.5.0",
-    "servez": "^1.11.0"
+    "@typescript-eslint/eslint-plugin": "^2.0.0",
+    "@typescript-eslint/parser": "^2.0.0",
+    "concurrently": "^4.1.2",
+    "eslint": "^6.2.1",
+    "eslint-config-mdcs": "^4.2.3",
+    "eslint-plugin-html": "^6.0.0",
+    "failonlyreporter": "^1.0.0",
+    "google-closure-compiler": "20190729.0.0",
+    "http-server": "^0.11.1",
+    "qunit": "^2.9.2",
+    "rollup": "^1.19.4",
+    "typescript": "^3.5.3"
   },
   "directories": {
     "doc": "docs",
@@ -56,34 +51,19 @@
     "test": "test"
   },
   "eslintConfig": {
-    "root": true,
+    "parser": "@typescript-eslint/parser",
     "extends": "mdcs",
-    "parser": "@babel/eslint-parser",
-    "parserOptions": {
-      "babelOptions": {
-        "configFile": "./utils/build/.babelrc.json"
-      }
-    },
     "plugins": [
-      "html"
+      "html",
+      "@typescript-eslint"
     ],
-    "globals": {
-      "potpack": true,
-      "fflate": true,
-      "ZSTDDecoder": true,
-      "bodymovin": true,
-      "OIMO": true
-    },
     "rules": {
-      "quotes": [
+      "@typescript-eslint/no-unused-vars": 1,
+      "@typescript-eslint/indent": [
         "error",
-        "single"
-      ],
-      "prefer-const": [
-        "error",
+        "tab",
         {
-          "destructuring": "any",
-          "ignoreReadBeforeAssign": false
+          "SwitchCase": 1
         }
       ]
     }
@@ -101,6 +81,7 @@
     "src"
   ],
   "homepage": "https://threejs.org/",
+  "jsnext:main": "build/three.module.js",
   "jspm": {
     "files": [
       "package.json",
@@ -115,17 +96,8 @@
   "keywords": [
     "three",
     "three.js",
-    "javascript",
     "3d",
-    "virtual-reality",
-    "augmented-reality",
-    "webgl",
-    "webgl2",
-    "webaudio",
-    "webxr",
-    "canvas",
-    "svg",
-    "html5"
+    "webgl"
   ],
   "license": "MIT",
   "main": "build/three.js",
@@ -136,23 +108,17 @@
     "url": "git+https://github.com/mrdoob/three.js.git"
   },
   "scripts": {
-    "build": "rollup -c utils/build/rollup.config.js",
-    "build-examples": "rollup -c utils/build/rollup.examples.config.js && echo '\nFormatting...' && eslint examples/js --ext js --ignore-pattern libs --ignore-pattern ifc --fix",
-    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c utils/build/rollup.config.js -w -m inline\" \"servez -p 8080\"",
-    "lint": "eslint src --ext js",
-    "lint-docs": "eslint docs --ext html",
-    "lint-examples": "eslint examples/js examples/jsm --ext js --ignore-pattern libs --ignore-pattern ifc",
-    "lint-fix": "npm run lint -- --fix && npm run lint-examples -- --fix",
-    "make-screenshot": "node test/e2e/puppeteer.js --make",
-    "prepublishOnly": "node utils/prepublish.js",
+    "build": "rollup -c",
+    "build-closure": "rollup -c && google-closure-compiler --warning_level=VERBOSE --jscomp_off=globalThis --jscomp_off=checkTypes --externs utils/build/externs.js --language_in=ECMASCRIPT5_STRICT --js build/three.js --js_output_file build/three.min.js",
+    "build-examples": "rollup -c rollup-examples.config.js",
+    "build-test": "rollup -c test/rollup.unit.config.js",
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"http-server -c-1 -p 8080\"",
+    "dev-test": "concurrently --names \"ROLLUP,ROLLUPTEST,HTTP\" -c \"bgBlue.bold,bgRed.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"rollup -c test/rollup.unit.config.js -w -m inline\" \"http-server -p 8080\"",
+    "lint": "eslint src --ext js --ext ts && tsc src/Three.d.ts --noEmit",
     "start": "npm run dev",
-    "test": "npm run lint && npm run test-unit",
-    "test-e2e": "node test/e2e/puppeteer.js",
-    "test-e2e-cov": "node test/e2e/check-coverage.js",
-    "test-treeshake": "rollup -c test/rollup.treeshake.config.js",
-    "test-unit": "npm run unit --prefix test",
-    "test-unit-examples": "npm run unit-examples --prefix test"
+    "test": "npm run build-test && qunit -r failonlyreporter test/unit/three.source.unit.js",
+    "travis": "npm run lint && npm test"
   },
-  "sideEffects": false,
-  "version": "0.129.0"
+  "types": "src/Three.d.ts",
+  "version": "0.108.0"
 }

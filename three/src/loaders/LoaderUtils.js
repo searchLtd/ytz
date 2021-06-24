@@ -1,6 +1,10 @@
-class LoaderUtils {
+/**
+ * @author Don McCurdy / https://www.donmccurdy.com
+ */
 
-	static decodeText( array ) {
+var LoaderUtils = {
+
+	decodeText: function ( array ) {
 
 		if ( typeof TextDecoder !== 'undefined' ) {
 
@@ -11,9 +15,9 @@ class LoaderUtils {
 		// Avoid the String.fromCharCode.apply(null, array) shortcut, which
 		// throws a "maximum call stack size exceeded" error for large arrays.
 
-		let s = '';
+		var s = '';
 
-		for ( let i = 0, il = array.length; i < il; i ++ ) {
+		for ( var i = 0, il = array.length; i < il; i ++ ) {
 
 			// Implicitly assumes little-endian.
 			s += String.fromCharCode( array[ i ] );
@@ -32,11 +36,11 @@ class LoaderUtils {
 
 		}
 
-	}
+	},
 
-	static extractUrlBase( url ) {
+	extractUrlBase: function ( url ) {
 
-		const index = url.lastIndexOf( '/' );
+		var index = url.lastIndexOf( '/' );
 
 		if ( index === - 1 ) return './';
 
@@ -44,6 +48,6 @@ class LoaderUtils {
 
 	}
 
-}
+};
 
 export { LoaderUtils };

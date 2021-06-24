@@ -4,6 +4,7 @@ export default /* glsl */`
 #ifdef PHYSICAL
 	#define REFLECTIVITY
 	#define CLEARCOAT
+	#define TRANSPARENCY
 #endif
 
 uniform vec3 diffuse;
@@ -12,11 +13,8 @@ uniform float roughness;
 uniform float metalness;
 uniform float opacity;
 
-#ifdef USE_TRANSMISSION
-	uniform float transmission;
-	uniform float thickness;
-	uniform vec3 attenuationColor;
-	uniform float attenuationDistance;
+#ifdef TRANSPARENCY
+	uniform float transparency;
 #endif
 
 #ifdef REFLECTIVITY
@@ -59,7 +57,6 @@ varying vec3 vViewPosition;
 #include <lightmap_pars_fragment>
 #include <emissivemap_pars_fragment>
 #include <bsdfs>
-#include <transmission_pars_fragment>
 #include <cube_uv_reflection_fragment>
 #include <envmap_common_pars_fragment>
 #include <envmap_physical_pars_fragment>
@@ -69,7 +66,7 @@ varying vec3 vViewPosition;
 #include <shadowmap_pars_fragment>
 #include <bumpmap_pars_fragment>
 #include <normalmap_pars_fragment>
-#include <clearcoat_pars_fragment>
+#include <clearcoat_normalmap_pars_fragment>
 #include <roughnessmap_pars_fragment>
 #include <metalnessmap_pars_fragment>
 #include <logdepthbuf_pars_fragment>
@@ -82,11 +79,6 @@ void main() {
 	vec4 diffuseColor = vec4( diffuse, opacity );
 	ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
 	vec3 totalEmissiveRadiance = emissive;
-
-	#ifdef USE_TRANSMISSION
-		float totalTransmission = transmission;
-		float thicknessFactor = thickness;
-	#endif
 
 	#include <logdepthbuf_fragment>
 	#include <map_fragment>
@@ -101,10 +93,6 @@ void main() {
 	#include <clearcoat_normal_fragment_maps>
 	#include <emissivemap_fragment>
 
-	vec3 rawDiffuseColor = diffuseColor.rgb;
-
-	#include <transmission_fragment>
-
 	// accumulation
 	#include <lights_physical_fragment>
 	#include <lights_fragment_begin>
@@ -115,6 +103,11 @@ void main() {
 	#include <aomap_fragment>
 
 	vec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;
+
+	// this is a stub for the transparency model
+	#ifdef TRANSPARENCY
+		diffuseColor.a *= saturate( 1. - transparency + linearToRelativeLuminance( reflectedLight.directSpecular + reflectedLight.indirectSpecular ) );
+	#endif
 
 	gl_FragColor = vec4( outgoingLight, diffuseColor.a );
 

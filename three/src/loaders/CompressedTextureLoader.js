@@ -4,40 +4,42 @@ import { CompressedTexture } from '../textures/CompressedTexture.js';
 import { Loader } from './Loader.js';
 
 /**
- * Abstract Base class to block based textures loader (dds, pvr, ...)
+ * @author mrdoob / http://mrdoob.com/
  *
- * Sub classes have to implement the parse() method which will be used in load().
+ * Abstract Base class to block based textures loader (dds, pvr, ...)
  */
 
-class CompressedTextureLoader extends Loader {
+function CompressedTextureLoader( manager ) {
 
-	constructor( manager ) {
+	Loader.call( this, manager );
 
-		super( manager );
+	// override in sub classes
+	this._parser = null;
 
-	}
+}
 
-	load( url, onLoad, onProgress, onError ) {
+CompressedTextureLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
-		const scope = this;
+	constructor: CompressedTextureLoader,
 
-		const images = [];
+	load: function ( url, onLoad, onProgress, onError ) {
 
-		const texture = new CompressedTexture();
+		var scope = this;
 
-		const loader = new FileLoader( this.manager );
+		var images = [];
+
+		var texture = new CompressedTexture();
+		texture.image = images;
+
+		var loader = new FileLoader( this.manager );
 		loader.setPath( this.path );
 		loader.setResponseType( 'arraybuffer' );
-		loader.setRequestHeader( this.requestHeader );
-		loader.setWithCredentials( scope.withCredentials );
-
-		let loaded = 0;
 
 		function loadTexture( i ) {
 
 			loader.load( url[ i ], function ( buffer ) {
 
-				const texDatas = scope.parse( buffer, true );
+				var texDatas = scope._parser( buffer, true );
 
 				images[ i ] = {
 					width: texDatas.width,
@@ -50,9 +52,9 @@ class CompressedTextureLoader extends Loader {
 
 				if ( loaded === 6 ) {
 
-					if ( texDatas.mipmapCount === 1 ) texture.minFilter = LinearFilter;
+					if ( texDatas.mipmapCount === 1 )
+						texture.minFilter = LinearFilter;
 
-					texture.image = images;
 					texture.format = texDatas.format;
 					texture.needsUpdate = true;
 
@@ -66,7 +68,9 @@ class CompressedTextureLoader extends Loader {
 
 		if ( Array.isArray( url ) ) {
 
-			for ( let i = 0, il = url.length; i < il; ++ i ) {
+			var loaded = 0;
+
+			for ( var i = 0, il = url.length; i < il; ++ i ) {
 
 				loadTexture( i );
 
@@ -78,17 +82,17 @@ class CompressedTextureLoader extends Loader {
 
 			loader.load( url, function ( buffer ) {
 
-				const texDatas = scope.parse( buffer, true );
+				var texDatas = scope._parser( buffer, true );
 
 				if ( texDatas.isCubemap ) {
 
-					const faces = texDatas.mipmaps.length / texDatas.mipmapCount;
+					var faces = texDatas.mipmaps.length / texDatas.mipmapCount;
 
-					for ( let f = 0; f < faces; f ++ ) {
+					for ( var f = 0; f < faces; f ++ ) {
 
 						images[ f ] = { mipmaps: [] };
 
-						for ( let i = 0; i < texDatas.mipmapCount; i ++ ) {
+						for ( var i = 0; i < texDatas.mipmapCount; i ++ ) {
 
 							images[ f ].mipmaps.push( texDatas.mipmaps[ f * texDatas.mipmapCount + i ] );
 							images[ f ].format = texDatas.format;
@@ -98,8 +102,6 @@ class CompressedTextureLoader extends Loader {
 						}
 
 					}
-
-					texture.image = images;
 
 				} else {
 
@@ -128,7 +130,7 @@ class CompressedTextureLoader extends Loader {
 
 	}
 
-}
+} );
 
 
 export { CompressedTextureLoader };

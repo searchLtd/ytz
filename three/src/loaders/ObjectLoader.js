@@ -4,6 +4,7 @@ import {
 	CubeRefractionMapping,
 	EquirectangularReflectionMapping,
 	EquirectangularRefractionMapping,
+	SphericalReflectionMapping,
 	CubeUVReflectionMapping,
 	CubeUVRefractionMapping,
 
@@ -18,11 +19,9 @@ import {
 	LinearMipmapNearestFilter,
 	LinearMipmapLinearFilter
 } from '../constants.js';
-import { BufferAttribute } from '../core/BufferAttribute.js';
 import { Color } from '../math/Color.js';
 import { Object3D } from '../core/Object3D.js';
 import { Group } from '../objects/Group.js';
-import { InstancedMesh } from '../objects/InstancedMesh.js';
 import { Sprite } from '../objects/Sprite.js';
 import { Points } from '../objects/Points.js';
 import { Line } from '../objects/Line.js';
@@ -31,8 +30,6 @@ import { LineSegments } from '../objects/LineSegments.js';
 import { LOD } from '../objects/LOD.js';
 import { Mesh } from '../objects/Mesh.js';
 import { SkinnedMesh } from '../objects/SkinnedMesh.js';
-import { Bone } from '../objects/Bone.js';
-import { Skeleton } from '../objects/Skeleton.js';
 import { Shape } from '../extras/core/Shape.js';
 import { Fog } from '../scenes/Fog.js';
 import { FogExp2 } from '../scenes/FogExp2.js';
@@ -42,13 +39,11 @@ import { PointLight } from '../lights/PointLight.js';
 import { DirectionalLight } from '../lights/DirectionalLight.js';
 import { AmbientLight } from '../lights/AmbientLight.js';
 import { RectAreaLight } from '../lights/RectAreaLight.js';
-import { LightProbe } from '../lights/LightProbe.js';
 import { OrthographicCamera } from '../cameras/OrthographicCamera.js';
 import { PerspectiveCamera } from '../cameras/PerspectiveCamera.js';
 import { Scene } from '../scenes/Scene.js';
 import { CubeTexture } from '../textures/CubeTexture.js';
 import { Texture } from '../textures/Texture.js';
-import { DataTexture } from '../textures/DataTexture.js';
 import { ImageLoader } from './ImageLoader.js';
 import { LoadingManager } from './LoadingManager.js';
 import { AnimationClip } from '../animation/AnimationClip.js';
@@ -59,30 +54,33 @@ import { Loader } from './Loader.js';
 import { FileLoader } from './FileLoader.js';
 import * as Geometries from '../geometries/Geometries.js';
 import * as Curves from '../extras/curves/Curves.js';
-import { getTypedArray } from '../utils.js';
 
-class ObjectLoader extends Loader {
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
 
-	constructor( manager ) {
+function ObjectLoader( manager ) {
 
-		super( manager );
+	Loader.call( this, manager );
 
-	}
+}
 
-	load( url, onLoad, onProgress, onError ) {
+ObjectLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
-		const scope = this;
+	constructor: ObjectLoader,
 
-		const path = ( this.path === '' ) ? LoaderUtils.extractUrlBase( url ) : this.path;
+	load: function ( url, onLoad, onProgress, onError ) {
+
+		var scope = this;
+
+		var path = ( this.path === '' ) ? LoaderUtils.extractUrlBase( url ) : this.path;
 		this.resourcePath = this.resourcePath || path;
 
-		const loader = new FileLoader( this.manager );
+		var loader = new FileLoader( scope.manager );
 		loader.setPath( this.path );
-		loader.setRequestHeader( this.requestHeader );
-		loader.setWithCredentials( this.withCredentials );
 		loader.load( url, function ( text ) {
 
-			let json = null;
+			var json = null;
 
 			try {
 
@@ -98,7 +96,7 @@ class ObjectLoader extends Loader {
 
 			}
 
-			const metadata = json.metadata;
+			var metadata = json.metadata;
 
 			if ( metadata === undefined || metadata.type === undefined || metadata.type.toLowerCase() === 'geometry' ) {
 
@@ -111,62 +109,49 @@ class ObjectLoader extends Loader {
 
 		}, onProgress, onError );
 
-	}
+	},
 
-	parse( json, onLoad ) {
+	parse: function ( json, onLoad ) {
 
-		const animations = this.parseAnimations( json.animations );
-		const shapes = this.parseShapes( json.shapes );
-		const geometries = this.parseGeometries( json.geometries, shapes );
+		var shapes = this.parseShape( json.shapes );
+		var geometries = this.parseGeometries( json.geometries, shapes );
 
-		const images = this.parseImages( json.images, function () {
+		var images = this.parseImages( json.images, function () {
 
 			if ( onLoad !== undefined ) onLoad( object );
 
 		} );
 
-		const textures = this.parseTextures( json.textures, images );
-		const materials = this.parseMaterials( json.materials, textures );
+		var textures = this.parseTextures( json.textures, images );
+		var materials = this.parseMaterials( json.materials, textures );
 
-		const object = this.parseObject( json.object, geometries, materials, animations );
-		const skeletons = this.parseSkeletons( json.skeletons, object );
+		var object = this.parseObject( json.object, geometries, materials );
 
-		this.bindSkeletons( object, skeletons );
+		if ( json.animations ) {
 
-		//
+			object.animations = this.parseAnimations( json.animations );
 
-		if ( onLoad !== undefined ) {
+		}
 
-			let hasImages = false;
+		if ( json.images === undefined || json.images.length === 0 ) {
 
-			for ( const uuid in images ) {
-
-				if ( images[ uuid ] instanceof HTMLImageElement ) {
-
-					hasImages = true;
-					break;
-
-				}
-
-			}
-
-			if ( hasImages === false ) onLoad( object );
+			if ( onLoad !== undefined ) onLoad( object );
 
 		}
 
 		return object;
 
-	}
+	},
 
-	parseShapes( json ) {
+	parseShape: function ( json ) {
 
-		const shapes = {};
+		var shapes = {};
 
 		if ( json !== undefined ) {
 
-			for ( let i = 0, l = json.length; i < l; i ++ ) {
+			for ( var i = 0, l = json.length; i < l; i ++ ) {
 
-				const shape = new Shape().fromJSON( json[ i ] );
+				var shape = new Shape().fromJSON( json[ i ] );
 
 				shapes[ shape.uuid ] = shape;
 
@@ -176,52 +161,20 @@ class ObjectLoader extends Loader {
 
 		return shapes;
 
-	}
+	},
 
-	parseSkeletons( json, object ) {
+	parseGeometries: function ( json, shapes ) {
 
-		const skeletons = {};
-		const bones = {};
-
-		// generate bone lookup table
-
-		object.traverse( function ( child ) {
-
-			if ( child.isBone ) bones[ child.uuid ] = child;
-
-		} );
-
-		// create skeletons
+		var geometries = {};
 
 		if ( json !== undefined ) {
 
-			for ( let i = 0, l = json.length; i < l; i ++ ) {
+			var bufferGeometryLoader = new BufferGeometryLoader();
 
-				const skeleton = new Skeleton().fromJSON( json[ i ], bones );
+			for ( var i = 0, l = json.length; i < l; i ++ ) {
 
-				skeletons[ skeleton.uuid ] = skeleton;
-
-			}
-
-		}
-
-		return skeletons;
-
-	}
-
-	parseGeometries( json, shapes ) {
-
-		const geometries = {};
-		let geometryShapes;
-
-		if ( json !== undefined ) {
-
-			const bufferGeometryLoader = new BufferGeometryLoader();
-
-			for ( let i = 0, l = json.length; i < l; i ++ ) {
-
-				let geometry;
-				const data = json[ i ];
+				var geometry;
+				var data = json[ i ];
 
 				switch ( data.type ) {
 
@@ -239,6 +192,7 @@ class ObjectLoader extends Loader {
 
 					case 'BoxGeometry':
 					case 'BoxBufferGeometry':
+					case 'CubeGeometry': // backwards compatible
 
 						geometry = new Geometries[ data.type ](
 							data.width,
@@ -408,11 +362,11 @@ class ObjectLoader extends Loader {
 					case 'ShapeGeometry':
 					case 'ShapeBufferGeometry':
 
-						geometryShapes = [];
+						var geometryShapes = [];
 
-						for ( let j = 0, jl = data.shapes.length; j < jl; j ++ ) {
+						for ( var j = 0, jl = data.shapes.length; j < jl; j ++ ) {
 
-							const shape = shapes[ data.shapes[ j ] ];
+							var shape = shapes[ data.shapes[ j ] ];
 
 							geometryShapes.push( shape );
 
@@ -429,17 +383,17 @@ class ObjectLoader extends Loader {
 					case 'ExtrudeGeometry':
 					case 'ExtrudeBufferGeometry':
 
-						geometryShapes = [];
+						var geometryShapes = [];
 
-						for ( let j = 0, jl = data.shapes.length; j < jl; j ++ ) {
+						for ( var j = 0, jl = data.shapes.length; j < jl; j ++ ) {
 
-							const shape = shapes[ data.shapes[ j ] ];
+							var shape = shapes[ data.shapes[ j ] ];
 
 							geometryShapes.push( shape );
 
 						}
 
-						const extrudePath = data.options.extrudePath;
+						var extrudePath = data.options.extrudePath;
 
 						if ( extrudePath !== undefined ) {
 
@@ -463,7 +417,17 @@ class ObjectLoader extends Loader {
 
 					case 'Geometry':
 
-						console.error( 'THREE.ObjectLoader: Loading "Geometry" is not supported anymore.' );
+						if ( 'THREE' in window && 'LegacyJSONLoader' in THREE ) {
+
+							var geometryLoader = new THREE.LegacyJSONLoader();
+							geometry = geometryLoader.parse( data, this.resourcePath ).geometry;
+
+
+						} else {
+
+							console.error( 'THREE.ObjectLoader: You have to import LegacyJSONLoader in order load geometry data of type "Geometry".' );
+
+						}
 
 						break;
 
@@ -488,31 +452,31 @@ class ObjectLoader extends Loader {
 
 		return geometries;
 
-	}
+	},
 
-	parseMaterials( json, textures ) {
+	parseMaterials: function ( json, textures ) {
 
-		const cache = {}; // MultiMaterial
-		const materials = {};
+		var cache = {}; // MultiMaterial
+		var materials = {};
 
 		if ( json !== undefined ) {
 
-			const loader = new MaterialLoader();
+			var loader = new MaterialLoader();
 			loader.setTextures( textures );
 
-			for ( let i = 0, l = json.length; i < l; i ++ ) {
+			for ( var i = 0, l = json.length; i < l; i ++ ) {
 
-				const data = json[ i ];
+				var data = json[ i ];
 
 				if ( data.type === 'MultiMaterial' ) {
 
 					// Deprecated
 
-					const array = [];
+					var array = [];
 
-					for ( let j = 0; j < data.materials.length; j ++ ) {
+					for ( var j = 0; j < data.materials.length; j ++ ) {
 
-						const material = data.materials[ j ];
+						var material = data.materials[ j ];
 
 						if ( cache[ material.uuid ] === undefined ) {
 
@@ -544,36 +508,32 @@ class ObjectLoader extends Loader {
 
 		return materials;
 
-	}
+	},
 
-	parseAnimations( json ) {
+	parseAnimations: function ( json ) {
 
-		const animations = {};
+		var animations = [];
 
-		if ( json !== undefined ) {
+		for ( var i = 0; i < json.length; i ++ ) {
 
-			for ( let i = 0; i < json.length; i ++ ) {
+			var data = json[ i ];
 
-				const data = json[ i ];
+			var clip = AnimationClip.parse( data );
 
-				const clip = AnimationClip.parse( data );
+			if ( data.uuid !== undefined ) clip.uuid = data.uuid;
 
-				animations[ clip.uuid ] = clip;
-
-			}
+			animations.push( clip );
 
 		}
 
 		return animations;
 
-	}
+	},
 
-	parseImages( json, onLoad ) {
+	parseImages: function ( json, onLoad ) {
 
-		const scope = this;
-		const images = {};
-
-		let loader;
+		var scope = this;
+		var images = {};
 
 		function loadImage( url ) {
 
@@ -592,47 +552,17 @@ class ObjectLoader extends Loader {
 
 		}
 
-		function deserializeImage( image ) {
-
-			if ( typeof image === 'string' ) {
-
-				const url = image;
-
-				const path = /^(\/\/)|([a-z]+:(\/\/)?)/i.test( url ) ? url : scope.resourcePath + url;
-
-				return loadImage( path );
-
-			} else {
-
-				if ( image.data ) {
-
-					return {
-						data: getTypedArray( image.type, image.data ),
-						width: image.width,
-						height: image.height
-					};
-
-				} else {
-
-					return null;
-
-				}
-
-			}
-
-		}
-
 		if ( json !== undefined && json.length > 0 ) {
 
-			const manager = new LoadingManager( onLoad );
+			var manager = new LoadingManager( onLoad );
 
-			loader = new ImageLoader( manager );
+			var loader = new ImageLoader( manager );
 			loader.setCrossOrigin( this.crossOrigin );
 
-			for ( let i = 0, il = json.length; i < il; i ++ ) {
+			for ( var i = 0, il = json.length; i < il; i ++ ) {
 
-				const image = json[ i ];
-				const url = image.url;
+				var image = json[ i ];
+				var url = image.url;
 
 				if ( Array.isArray( url ) ) {
 
@@ -640,27 +570,13 @@ class ObjectLoader extends Loader {
 
 					images[ image.uuid ] = [];
 
-					for ( let j = 0, jl = url.length; j < jl; j ++ ) {
+					for ( var j = 0, jl = url.length; j < jl; j ++ ) {
 
-						const currentUrl = url[ j ];
+						var currentUrl = url[ j ];
 
-						const deserializedImage = deserializeImage( currentUrl );
+						var path = /^(\/\/)|([a-z]+:(\/\/)?)/i.test( currentUrl ) ? currentUrl : scope.resourcePath + currentUrl;
 
-						if ( deserializedImage !== null ) {
-
-							if ( deserializedImage instanceof HTMLImageElement ) {
-
-								images[ image.uuid ].push( deserializedImage );
-
-							} else {
-
-								// special case: handle array of data textures for cube textures
-
-								images[ image.uuid ].push( new DataTexture( deserializedImage.data, deserializedImage.width, deserializedImage.height ) );
-
-							}
-
-						}
+						images[ image.uuid ].push( loadImage( path ) );
 
 					}
 
@@ -668,13 +584,9 @@ class ObjectLoader extends Loader {
 
 					// load single image
 
-					const deserializedImage = deserializeImage( image.url );
+					var path = /^(\/\/)|([a-z]+:(\/\/)?)/i.test( image.url ) ? image.url : scope.resourcePath + image.url;
 
-					if ( deserializedImage !== null ) {
-
-						images[ image.uuid ] = deserializedImage;
-
-					}
+					images[ image.uuid ] = loadImage( path );
 
 				}
 
@@ -684,9 +596,9 @@ class ObjectLoader extends Loader {
 
 		return images;
 
-	}
+	},
 
-	parseTextures( json, images ) {
+	parseTextures: function ( json, images ) {
 
 		function parseConstant( value, type ) {
 
@@ -698,13 +610,13 @@ class ObjectLoader extends Loader {
 
 		}
 
-		const textures = {};
+		var textures = {};
 
 		if ( json !== undefined ) {
 
-			for ( let i = 0, l = json.length; i < l; i ++ ) {
+			for ( var i = 0, l = json.length; i < l; i ++ ) {
 
-				const data = json[ i ];
+				var data = json[ i ];
 
 				if ( data.image === undefined ) {
 
@@ -718,30 +630,19 @@ class ObjectLoader extends Loader {
 
 				}
 
-				let texture;
-				const image = images[ data.image ];
+				var texture;
 
-				if ( Array.isArray( image ) ) {
+				if ( Array.isArray( images[ data.image ] ) ) {
 
-					texture = new CubeTexture( image );
-
-					if ( image.length === 6 ) texture.needsUpdate = true;
+					texture = new CubeTexture( images[ data.image ] );
 
 				} else {
 
-					if ( image && image.data ) {
-
-						texture = new DataTexture( image.data, image.width, image.height );
-
-					} else {
-
-						texture = new Texture( image );
-
-					}
-
-					if ( image ) texture.needsUpdate = true; // textures can have undefined image data
+					texture = new Texture( images[ data.image ] );
 
 				}
+
+				texture.needsUpdate = true;
 
 				texture.uuid = data.uuid;
 
@@ -782,11 +683,11 @@ class ObjectLoader extends Loader {
 
 		return textures;
 
-	}
+	},
 
-	parseObject( data, geometries, materials, animations ) {
+	parseObject: function ( data, geometries, materials ) {
 
-		let object;
+		var object;
 
 		function getGeometry( name ) {
 
@@ -806,11 +707,11 @@ class ObjectLoader extends Loader {
 
 			if ( Array.isArray( name ) ) {
 
-				const array = [];
+				var array = [];
 
-				for ( let i = 0, l = name.length; i < l; i ++ ) {
+				for ( var i = 0, l = name.length; i < l; i ++ ) {
 
-					const uuid = name[ i ];
+					var uuid = name[ i ];
 
 					if ( materials[ uuid ] === undefined ) {
 
@@ -835,8 +736,6 @@ class ObjectLoader extends Loader {
 			return materials[ name ];
 
 		}
-
-		let geometry, material;
 
 		switch ( data.type ) {
 
@@ -927,45 +826,26 @@ class ObjectLoader extends Loader {
 
 				break;
 
-			case 'LightProbe':
-
-				object = new LightProbe().fromJSON( data );
-
-				break;
-
 			case 'SkinnedMesh':
 
-				geometry = getGeometry( data.geometry );
-			 	material = getMaterial( data.material );
-
-				object = new SkinnedMesh( geometry, material );
-
-				if ( data.bindMode !== undefined ) object.bindMode = data.bindMode;
-				if ( data.bindMatrix !== undefined ) object.bindMatrix.fromArray( data.bindMatrix );
-				if ( data.skeleton !== undefined ) object.skeleton = data.skeleton;
-
-				break;
+				console.warn( 'THREE.ObjectLoader.parseObject() does not support SkinnedMesh yet.' );
 
 			case 'Mesh':
 
-				geometry = getGeometry( data.geometry );
-				material = getMaterial( data.material );
+				var geometry = getGeometry( data.geometry );
+				var material = getMaterial( data.material );
 
-				object = new Mesh( geometry, material );
+				if ( geometry.bones && geometry.bones.length > 0 ) {
 
-				break;
+					object = new SkinnedMesh( geometry, material );
 
-			case 'InstancedMesh':
+				} else {
 
-				geometry = getGeometry( data.geometry );
-				material = getMaterial( data.material );
-				const count = data.count;
-				const instanceMatrix = data.instanceMatrix;
-				const instanceColor = data.instanceColor;
+					object = new Mesh( geometry, material );
 
-				object = new InstancedMesh( geometry, material, count );
-				object.instanceMatrix = new BufferAttribute( new Float32Array( instanceMatrix.array ), 16 );
-				if ( instanceColor !== undefined ) object.instanceColor = new BufferAttribute( new Float32Array( instanceColor.array ), instanceColor.itemSize );
+				}
+
+				if ( data.drawMode !== undefined ) object.setDrawMode( data.drawMode );
 
 				break;
 
@@ -977,7 +857,7 @@ class ObjectLoader extends Loader {
 
 			case 'Line':
 
-				object = new Line( getGeometry( data.geometry ), getMaterial( data.material ) );
+				object = new Line( getGeometry( data.geometry ), getMaterial( data.material ), data.mode );
 
 				break;
 
@@ -1009,12 +889,6 @@ class ObjectLoader extends Loader {
 			case 'Group':
 
 				object = new Group();
-
-				break;
-
-			case 'Bone':
-
-				object = new Bone();
 
 				break;
 
@@ -1050,7 +924,6 @@ class ObjectLoader extends Loader {
 		if ( data.shadow ) {
 
 			if ( data.shadow.bias !== undefined ) object.shadow.bias = data.shadow.bias;
-			if ( data.shadow.normalBias !== undefined ) object.shadow.normalBias = data.shadow.normalBias;
 			if ( data.shadow.radius !== undefined ) object.shadow.radius = data.shadow.radius;
 			if ( data.shadow.mapSize !== undefined ) object.shadow.mapSize.fromArray( data.shadow.mapSize );
 			if ( data.shadow.camera !== undefined ) object.shadow.camera = this.parseObject( data.shadow.camera );
@@ -1065,25 +938,11 @@ class ObjectLoader extends Loader {
 
 		if ( data.children !== undefined ) {
 
-			const children = data.children;
+			var children = data.children;
 
-			for ( let i = 0; i < children.length; i ++ ) {
+			for ( var i = 0; i < children.length; i ++ ) {
 
-				object.add( this.parseObject( children[ i ], geometries, materials, animations ) );
-
-			}
-
-		}
-
-		if ( data.animations !== undefined ) {
-
-			const objectAnimations = data.animations;
-
-			for ( let i = 0; i < objectAnimations.length; i ++ ) {
-
-				const uuid = objectAnimations[ i ];
-
-				object.animations.push( animations[ uuid ] );
+				object.add( this.parseObject( children[ i ], geometries, materials ) );
 
 			}
 
@@ -1091,14 +950,12 @@ class ObjectLoader extends Loader {
 
 		if ( data.type === 'LOD' ) {
 
-			if ( data.autoUpdate !== undefined ) object.autoUpdate = data.autoUpdate;
+			var levels = data.levels;
 
-			const levels = data.levels;
+			for ( var l = 0; l < levels.length; l ++ ) {
 
-			for ( let l = 0; l < levels.length; l ++ ) {
-
-				const level = levels[ l ];
-				const child = object.getObjectByProperty( 'uuid', level.object );
+				var level = levels[ l ];
+				var child = object.getObjectByProperty( 'uuid', level.object );
 
 				if ( child !== undefined ) {
 
@@ -1114,60 +971,26 @@ class ObjectLoader extends Loader {
 
 	}
 
-	bindSkeletons( object, skeletons ) {
+} );
 
-		if ( Object.keys( skeletons ).length === 0 ) return;
-
-		object.traverse( function ( child ) {
-
-			if ( child.isSkinnedMesh === true && child.skeleton !== undefined ) {
-
-				const skeleton = skeletons[ child.skeleton ];
-
-				if ( skeleton === undefined ) {
-
-					console.warn( 'THREE.ObjectLoader: No skeleton found with UUID:', child.skeleton );
-
-				} else {
-
-					child.bind( skeleton, child.bindMatrix );
-
-				}
-
-			}
-
-		} );
-
-	}
-
-	/* DEPRECATED */
-
-	setTexturePath( value ) {
-
-		console.warn( 'THREE.ObjectLoader: .setTexturePath() has been renamed to .setResourcePath().' );
-		return this.setResourcePath( value );
-
-	}
-
-}
-
-const TEXTURE_MAPPING = {
+var TEXTURE_MAPPING = {
 	UVMapping: UVMapping,
 	CubeReflectionMapping: CubeReflectionMapping,
 	CubeRefractionMapping: CubeRefractionMapping,
 	EquirectangularReflectionMapping: EquirectangularReflectionMapping,
 	EquirectangularRefractionMapping: EquirectangularRefractionMapping,
+	SphericalReflectionMapping: SphericalReflectionMapping,
 	CubeUVReflectionMapping: CubeUVReflectionMapping,
 	CubeUVRefractionMapping: CubeUVRefractionMapping
 };
 
-const TEXTURE_WRAPPING = {
+var TEXTURE_WRAPPING = {
 	RepeatWrapping: RepeatWrapping,
 	ClampToEdgeWrapping: ClampToEdgeWrapping,
 	MirroredRepeatWrapping: MirroredRepeatWrapping
 };
 
-const TEXTURE_FILTER = {
+var TEXTURE_FILTER = {
 	NearestFilter: NearestFilter,
 	NearestMipmapNearestFilter: NearestMipmapNearestFilter,
 	NearestMipmapLinearFilter: NearestMipmapLinearFilter,
@@ -1175,5 +998,6 @@ const TEXTURE_FILTER = {
 	LinearMipmapNearestFilter: LinearMipmapNearestFilter,
 	LinearMipmapLinearFilter: LinearMipmapLinearFilter
 };
+
 
 export { ObjectLoader };

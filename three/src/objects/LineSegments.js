@@ -2,22 +2,30 @@ import { Line } from './Line.js';
 import { Vector3 } from '../math/Vector3.js';
 import { Float32BufferAttribute } from '../core/BufferAttribute.js';
 
-const _start = /*@__PURE__*/ new Vector3();
-const _end = /*@__PURE__*/ new Vector3();
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
 
-class LineSegments extends Line {
+var _start = new Vector3();
+var _end = new Vector3();
 
-	constructor( geometry, material ) {
+function LineSegments( geometry, material ) {
 
-		super( geometry, material );
+	Line.call( this, geometry, material );
 
-		this.type = 'LineSegments';
+	this.type = 'LineSegments';
 
-	}
+}
 
-	computeLineDistances() {
+LineSegments.prototype = Object.assign( Object.create( Line.prototype ), {
 
-		const geometry = this.geometry;
+	constructor: LineSegments,
+
+	isLineSegments: true,
+
+	computeLineDistances: function () {
+
+		var geometry = this.geometry;
 
 		if ( geometry.isBufferGeometry ) {
 
@@ -25,10 +33,10 @@ class LineSegments extends Line {
 
 			if ( geometry.index === null ) {
 
-				const positionAttribute = geometry.attributes.position;
-				const lineDistances = [];
+				var positionAttribute = geometry.attributes.position;
+				var lineDistances = [];
 
-				for ( let i = 0, l = positionAttribute.count; i < l; i += 2 ) {
+				for ( var i = 0, l = positionAttribute.count; i < l; i += 2 ) {
 
 					_start.fromBufferAttribute( positionAttribute, i );
 					_end.fromBufferAttribute( positionAttribute, i + 1 );
@@ -38,7 +46,7 @@ class LineSegments extends Line {
 
 				}
 
-				geometry.setAttribute( 'lineDistance', new Float32BufferAttribute( lineDistances, 1 ) );
+				geometry.addAttribute( 'lineDistance', new Float32BufferAttribute( lineDistances, 1 ) );
 
 			} else {
 
@@ -48,7 +56,18 @@ class LineSegments extends Line {
 
 		} else if ( geometry.isGeometry ) {
 
-			console.error( 'THREE.LineSegments.computeLineDistances() no longer supports THREE.Geometry. Use THREE.BufferGeometry instead.' );
+			var vertices = geometry.vertices;
+			var lineDistances = geometry.lineDistances;
+
+			for ( var i = 0, l = vertices.length; i < l; i += 2 ) {
+
+				_start.copy( vertices[ i ] );
+				_end.copy( vertices[ i + 1 ] );
+
+				lineDistances[ i ] = ( i === 0 ) ? 0 : lineDistances[ i - 1 ];
+				lineDistances[ i + 1 ] = lineDistances[ i ] + _start.distanceTo( _end );
+
+			}
 
 		}
 
@@ -56,8 +75,7 @@ class LineSegments extends Line {
 
 	}
 
-}
+} );
 
-LineSegments.prototype.isLineSegments = true;
 
 export { LineSegments };

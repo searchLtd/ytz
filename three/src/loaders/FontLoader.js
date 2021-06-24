@@ -2,25 +2,29 @@ import { Font } from '../extras/core/Font.js';
 import { FileLoader } from './FileLoader.js';
 import { Loader } from './Loader.js';
 
-class FontLoader extends Loader {
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
 
-	constructor( manager ) {
+function FontLoader( manager ) {
 
-		super( manager );
+	Loader.call( this, manager );
 
-	}
+}
 
-	load( url, onLoad, onProgress, onError ) {
+FontLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
-		const scope = this;
+	constructor: FontLoader,
 
-		const loader = new FileLoader( this.manager );
+	load: function ( url, onLoad, onProgress, onError ) {
+
+		var scope = this;
+
+		var loader = new FileLoader( this.manager );
 		loader.setPath( this.path );
-		loader.setRequestHeader( this.requestHeader );
-		loader.setWithCredentials( scope.withCredentials );
 		loader.load( url, function ( text ) {
 
-			let json;
+			var json;
 
 			try {
 
@@ -33,21 +37,21 @@ class FontLoader extends Loader {
 
 			}
 
-			const font = scope.parse( json );
+			var font = scope.parse( json );
 
 			if ( onLoad ) onLoad( font );
 
 		}, onProgress, onError );
 
-	}
+	},
 
-	parse( json ) {
+	parse: function ( json ) {
 
 		return new Font( json );
 
 	}
 
-}
+} );
 
 
 export { FontLoader };

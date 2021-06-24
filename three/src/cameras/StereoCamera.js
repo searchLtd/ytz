@@ -1,45 +1,49 @@
 import { Matrix4 } from '../math/Matrix4.js';
-import * as MathUtils from '../math/MathUtils.js';
+import { _Math } from '../math/Math.js';
 import { PerspectiveCamera } from './PerspectiveCamera.js';
 
-const _eyeRight = /*@__PURE__*/ new Matrix4();
-const _eyeLeft = /*@__PURE__*/ new Matrix4();
+var _eyeRight = new Matrix4();
+var _eyeLeft = new Matrix4();
 
-class StereoCamera {
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
 
-	constructor() {
+function StereoCamera() {
 
-		this.type = 'StereoCamera';
+	this.type = 'StereoCamera';
 
-		this.aspect = 1;
+	this.aspect = 1;
 
-		this.eyeSep = 0.064;
+	this.eyeSep = 0.064;
 
-		this.cameraL = new PerspectiveCamera();
-		this.cameraL.layers.enable( 1 );
-		this.cameraL.matrixAutoUpdate = false;
+	this.cameraL = new PerspectiveCamera();
+	this.cameraL.layers.enable( 1 );
+	this.cameraL.matrixAutoUpdate = false;
 
-		this.cameraR = new PerspectiveCamera();
-		this.cameraR.layers.enable( 2 );
-		this.cameraR.matrixAutoUpdate = false;
+	this.cameraR = new PerspectiveCamera();
+	this.cameraR.layers.enable( 2 );
+	this.cameraR.matrixAutoUpdate = false;
 
-		this._cache = {
-			focus: null,
-			fov: null,
-			aspect: null,
-			near: null,
-			far: null,
-			zoom: null,
-			eyeSep: null
-		};
+	this._cache = {
+		focus: null,
+		fov: null,
+		aspect: null,
+		near: null,
+		far: null,
+		zoom: null,
+		eyeSep: null
+	};
 
-	}
+}
 
-	update( camera ) {
+Object.assign( StereoCamera.prototype, {
 
-		const cache = this._cache;
+	update: function ( camera ) {
 
-		const needsUpdate = cache.focus !== camera.focus || cache.fov !== camera.fov ||
+		var cache = this._cache;
+
+		var needsUpdate = cache.focus !== camera.focus || cache.fov !== camera.fov ||
 			cache.aspect !== camera.aspect * this.aspect || cache.near !== camera.near ||
 			cache.far !== camera.far || cache.zoom !== camera.zoom || cache.eyeSep !== this.eyeSep;
 
@@ -56,11 +60,11 @@ class StereoCamera {
 			// Off-axis stereoscopic effect based on
 			// http://paulbourke.net/stereographics/stereorender/
 
-			const projectionMatrix = camera.projectionMatrix.clone();
-			const eyeSepHalf = cache.eyeSep / 2;
-			const eyeSepOnProjection = eyeSepHalf * cache.near / cache.focus;
-			const ymax = ( cache.near * Math.tan( MathUtils.DEG2RAD * cache.fov * 0.5 ) ) / cache.zoom;
-			let xmin, xmax;
+			var projectionMatrix = camera.projectionMatrix.clone();
+			var eyeSepHalf = cache.eyeSep / 2;
+			var eyeSepOnProjection = eyeSepHalf * cache.near / cache.focus;
+			var ymax = ( cache.near * Math.tan( _Math.DEG2RAD * cache.fov * 0.5 ) ) / cache.zoom;
+			var xmin, xmax;
 
 			// translate xOffset
 
@@ -94,6 +98,7 @@ class StereoCamera {
 
 	}
 
-}
+} );
+
 
 export { StereoCamera };

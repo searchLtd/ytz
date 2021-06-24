@@ -20,7 +20,6 @@ export default /* glsl */`
 
 #endif
 
-#include <common>
 #include <uv_pars_vertex>
 #include <displacementmap_pars_vertex>
 #include <morphtarget_pars_vertex>

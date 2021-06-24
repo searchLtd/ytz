@@ -1,9 +1,9 @@
 export default /* glsl */`
 struct PhysicalMaterial {
 
-	vec3 diffuseColor;
-	float specularRoughness;
-	vec3 specularColor;
+	vec3	diffuseColor;
+	float	specularRoughness;
+	vec3	specularColor;
 
 #ifdef CLEARCOAT
 	float clearcoat;
@@ -140,7 +140,8 @@ void RE_IndirectSpecular_Physical( const in vec3 radiance, const in vec3 irradia
 
 	float clearcoatInv = 1.0 - clearcoatDHR;
 
-	// Both indirect specular and indirect diffuse light accumulate here
+	// Both indirect specular and diffuse light accumulate here
+	// if energy preservation enabled, and PMREM provided.
 
 	vec3 singleScattering = vec3( 0.0 );
 	vec3 multiScattering = vec3( 0.0 );
@@ -151,8 +152,7 @@ void RE_IndirectSpecular_Physical( const in vec3 radiance, const in vec3 irradia
 	vec3 diffuse = material.diffuseColor * ( 1.0 - ( singleScattering + multiScattering ) );
 
 	reflectedLight.indirectSpecular += clearcoatInv * radiance * singleScattering;
-	reflectedLight.indirectSpecular += multiScattering * cosineWeightedIrradiance;
-
+	reflectedLight.indirectDiffuse += multiScattering * cosineWeightedIrradiance;
 	reflectedLight.indirectDiffuse += diffuse * cosineWeightedIrradiance;
 
 }

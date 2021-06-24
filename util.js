@@ -59,7 +59,7 @@ module.exports = {
     try {
       let res = wx.getStorageSync(key); // key 的值为 canUserSetGailv 或 canUserSetOpacity
       return res != '' && (Date.parse(new Date()) - res.time) / 1000 < 60 * 60 * 24 ? true : false // 24小时内有效
-    } catch (e) {}
+    } catch (e) { }
     return false
   },
   //返回数组中一个的随机值
@@ -82,14 +82,14 @@ module.exports = {
   shareAppMessage(title) {
     return {
       title: title == undefined ? '爱喝酒摇骰子小游戏，KTV喝酒摇骰子，大排档喝酒摇骰子，街边骰子游戏，骰盅游戏。' : title,
-      imageUrl: imgArray[imgIndex = Math.floor(Math.random() * (maxLen + 1))]
+      imageUrl: imgArray[Math.floor(Math.random() * (maxLen + 1))]
     }
   },
   shareTimeline: (title) => {
     return {
       title: title == undefined ? '爱喝酒摇骰子小游戏，KTV喝酒摇骰子，大排档喝酒摇骰子，街边骰子游戏，骰盅游戏。' : title,
       query: 'pyq',
-      imageUrl: imgArray[imgIndex = Math.floor(Math.random() * (maxLen + 1))]
+      imageUrl: imgArray[Math.floor(Math.random() * (maxLen + 1))]
     }
   },
 

@@ -6,16 +6,15 @@ import { Matrix3 } from '../../math/Matrix3.js';
  * Uniforms library for shared webgl shaders
  */
 
-const UniformsLib = {
+var UniformsLib = {
 
 	common: {
 
-		diffuse: { value: new Color( 0xffffff ) },
+		diffuse: { value: new Color( 0xeeeeee ) },
 		opacity: { value: 1.0 },
 
 		map: { value: null },
 		uvTransform: { value: new Matrix3() },
-		uv2Transform: { value: new Matrix3() },
 
 		alphaMap: { value: null },
 
@@ -114,12 +113,10 @@ const UniformsLib = {
 
 		directionalLights: { value: [], properties: {
 			direction: {},
-			color: {}
-		} },
+			color: {},
 
-		directionalLightShadows: { value: [], properties: {
+			shadow: {},
 			shadowBias: {},
-			shadowNormalBias: {},
 			shadowRadius: {},
 			shadowMapSize: {}
 		} },
@@ -134,12 +131,10 @@ const UniformsLib = {
 			distance: {},
 			coneCos: {},
 			penumbraCos: {},
-			decay: {}
-		} },
+			decay: {},
 
-		spotLightShadows: { value: [], properties: {
+			shadow: {},
 			shadowBias: {},
-			shadowNormalBias: {},
 			shadowRadius: {},
 			shadowMapSize: {}
 		} },
@@ -151,12 +146,10 @@ const UniformsLib = {
 			color: {},
 			position: {},
 			decay: {},
-			distance: {}
-		} },
+			distance: {},
 
-		pointLightShadows: { value: [], properties: {
+			shadow: {},
 			shadowBias: {},
-			shadowNormalBias: {},
 			shadowRadius: {},
 			shadowMapSize: {},
 			shadowCameraNear: {},
@@ -178,33 +171,28 @@ const UniformsLib = {
 			position: {},
 			width: {},
 			height: {}
-		} },
-
-		ltc_1: { value: null },
-		ltc_2: { value: null }
+		} }
 
 	},
 
 	points: {
 
-		diffuse: { value: new Color( 0xffffff ) },
+		diffuse: { value: new Color( 0xeeeeee ) },
 		opacity: { value: 1.0 },
 		size: { value: 1.0 },
 		scale: { value: 1.0 },
 		map: { value: null },
-		alphaMap: { value: null },
 		uvTransform: { value: new Matrix3() }
 
 	},
 
 	sprite: {
 
-		diffuse: { value: new Color( 0xffffff ) },
+		diffuse: { value: new Color( 0xeeeeee ) },
 		opacity: { value: 1.0 },
 		center: { value: new Vector2( 0.5, 0.5 ) },
 		rotation: { value: 0.0 },
 		map: { value: null },
-		alphaMap: { value: null },
 		uvTransform: { value: new Matrix3() }
 
 	}

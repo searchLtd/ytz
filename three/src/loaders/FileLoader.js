@@ -1,17 +1,23 @@
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
+
 import { Cache } from './Cache.js';
 import { Loader } from './Loader.js';
 
-const loading = {};
+var loading = {};
 
-class FileLoader extends Loader {
+function FileLoader( manager ) {
 
-	constructor( manager ) {
+	Loader.call( this, manager );
 
-		super( manager );
+}
 
-	}
+FileLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
-	load( url, onLoad, onProgress, onError ) {
+	constructor: FileLoader,
+
+	load: function ( url, onLoad, onProgress, onError ) {
 
 		if ( url === undefined ) url = '';
 
@@ -19,9 +25,9 @@ class FileLoader extends Loader {
 
 		url = this.manager.resolveURL( url );
 
-		const scope = this;
+		var scope = this;
 
-		const cached = Cache.get( url );
+		var cached = Cache.get( url );
 
 		if ( cached !== undefined ) {
 
@@ -56,34 +62,33 @@ class FileLoader extends Loader {
 		}
 
 		// Check for data: URI
-		const dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
-		const dataUriRegexResult = url.match( dataUriRegex );
-		let request;
+		var dataUriRegex = /^data:(.*?)(;base64)?,(.*)$/;
+		var dataUriRegexResult = url.match( dataUriRegex );
 
 		// Safari can not handle Data URIs through XMLHttpRequest so process manually
 		if ( dataUriRegexResult ) {
 
-			const mimeType = dataUriRegexResult[ 1 ];
-			const isBase64 = !! dataUriRegexResult[ 2 ];
+			var mimeType = dataUriRegexResult[ 1 ];
+			var isBase64 = !! dataUriRegexResult[ 2 ];
+			var data = dataUriRegexResult[ 3 ];
 
-			let data = dataUriRegexResult[ 3 ];
 			data = decodeURIComponent( data );
 
 			if ( isBase64 ) data = atob( data );
 
 			try {
 
-				let response;
-				const responseType = ( this.responseType || '' ).toLowerCase();
+				var response;
+				var responseType = ( this.responseType || '' ).toLowerCase();
 
 				switch ( responseType ) {
 
 					case 'arraybuffer':
 					case 'blob':
 
-						const view = new Uint8Array( data.length );
+						var view = new Uint8Array( data.length );
 
-						for ( let i = 0; i < data.length; i ++ ) {
+						for ( var i = 0; i < data.length; i ++ ) {
 
 							view[ i ] = data.charCodeAt( i );
 
@@ -103,7 +108,7 @@ class FileLoader extends Loader {
 
 					case 'document':
 
-						const parser = new DOMParser();
+						var parser = new DOMParser();
 						response = parser.parseFromString( data, mimeType );
 
 						break;
@@ -159,15 +164,17 @@ class FileLoader extends Loader {
 
 			} );
 
-			request = new XMLHttpRequest();
+			var request = new XMLHttpRequest();
 
 			request.open( 'GET', url, true );
 
 			request.addEventListener( 'load', function ( event ) {
 
-				const response = this.response;
+				var response = this.response;
 
-				const callbacks = loading[ url ];
+				Cache.add( url, response );
+
+				var callbacks = loading[ url ];
 
 				delete loading[ url ];
 
@@ -178,13 +185,9 @@ class FileLoader extends Loader {
 
 					if ( this.status === 0 ) console.warn( 'THREE.FileLoader: HTTP Status 0 received.' );
 
-					// Add to cache only on HTTP success, so that we do not cache
-					// error response bodies as proper responses to requests.
-					Cache.add( url, response );
+					for ( var i = 0, il = callbacks.length; i < il; i ++ ) {
 
-					for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
-
-						const callback = callbacks[ i ];
+						var callback = callbacks[ i ];
 						if ( callback.onLoad ) callback.onLoad( response );
 
 					}
@@ -193,9 +196,9 @@ class FileLoader extends Loader {
 
 				} else {
 
-					for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
+					for ( var i = 0, il = callbacks.length; i < il; i ++ ) {
 
-						const callback = callbacks[ i ];
+						var callback = callbacks[ i ];
 						if ( callback.onError ) callback.onError( event );
 
 					}
@@ -209,11 +212,11 @@ class FileLoader extends Loader {
 
 			request.addEventListener( 'progress', function ( event ) {
 
-				const callbacks = loading[ url ];
+				var callbacks = loading[ url ];
 
-				for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
+				for ( var i = 0, il = callbacks.length; i < il; i ++ ) {
 
-					const callback = callbacks[ i ];
+					var callback = callbacks[ i ];
 					if ( callback.onProgress ) callback.onProgress( event );
 
 				}
@@ -222,13 +225,13 @@ class FileLoader extends Loader {
 
 			request.addEventListener( 'error', function ( event ) {
 
-				const callbacks = loading[ url ];
+				var callbacks = loading[ url ];
 
 				delete loading[ url ];
 
-				for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
+				for ( var i = 0, il = callbacks.length; i < il; i ++ ) {
 
-					const callback = callbacks[ i ];
+					var callback = callbacks[ i ];
 					if ( callback.onError ) callback.onError( event );
 
 				}
@@ -240,13 +243,13 @@ class FileLoader extends Loader {
 
 			request.addEventListener( 'abort', function ( event ) {
 
-				const callbacks = loading[ url ];
+				var callbacks = loading[ url ];
 
 				delete loading[ url ];
 
-				for ( let i = 0, il = callbacks.length; i < il; i ++ ) {
+				for ( var i = 0, il = callbacks.length; i < il; i ++ ) {
 
-					const callback = callbacks[ i ];
+					var callback = callbacks[ i ];
 					if ( callback.onError ) callback.onError( event );
 
 				}
@@ -261,7 +264,7 @@ class FileLoader extends Loader {
 
 			if ( request.overrideMimeType ) request.overrideMimeType( this.mimeType !== undefined ? this.mimeType : 'text/plain' );
 
-			for ( const header in this.requestHeader ) {
+			for ( var header in this.requestHeader ) {
 
 				request.setRequestHeader( header, this.requestHeader[ header ] );
 
@@ -275,23 +278,37 @@ class FileLoader extends Loader {
 
 		return request;
 
-	}
+	},
 
-	setResponseType( value ) {
+	setResponseType: function ( value ) {
 
 		this.responseType = value;
 		return this;
 
-	}
+	},
 
-	setMimeType( value ) {
+	setWithCredentials: function ( value ) {
+
+		this.withCredentials = value;
+		return this;
+
+	},
+
+	setMimeType: function ( value ) {
 
 		this.mimeType = value;
 		return this;
 
+	},
+
+	setRequestHeader: function ( value ) {
+
+		this.requestHeader = value;
+		return this;
+
 	}
 
-}
+} );
 
 
 export { FileLoader };

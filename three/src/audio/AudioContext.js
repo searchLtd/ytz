@@ -1,6 +1,10 @@
-let _context;
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
 
-const AudioContext = {
+var _context;
+
+var AudioContext = {
 
 	getContext: function () {
 

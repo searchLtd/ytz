@@ -1,23 +1,29 @@
+/**
+ * @author mrdoob / http://mrdoob.com/
+ */
+
 import { Cache } from './Cache.js';
 import { Loader } from './Loader.js';
 
-class ImageLoader extends Loader {
+function ImageLoader( manager ) {
 
-	constructor( manager ) {
+	Loader.call( this, manager );
 
-		super( manager );
+}
 
-	}
+ImageLoader.prototype = Object.assign( Object.create( Loader.prototype ), {
 
-	load( url, onLoad, onProgress, onError ) {
+	constructor: ImageLoader,
+
+	load: function ( url, onLoad, onProgress, onError ) {
 
 		if ( this.path !== undefined ) url = this.path + url;
 
 		url = this.manager.resolveURL( url );
 
-		const scope = this;
+		var scope = this;
 
-		const cached = Cache.get( url );
+		var cached = Cache.get( url );
 
 		if ( cached !== undefined ) {
 
@@ -35,7 +41,7 @@ class ImageLoader extends Loader {
 
 		}
 
-		const image = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'img' );
+		var image = document.createElementNS( 'http://www.w3.org/1999/xhtml', 'img' );
 
 		function onImageLoad() {
 
@@ -79,7 +85,7 @@ class ImageLoader extends Loader {
 
 	}
 
-}
+} );
 
 
 export { ImageLoader };

@@ -1,5 +1,4 @@
 export default /* glsl */`
-uniform bool receiveShadow;
 uniform vec3 ambientLightColor;
 uniform vec3 lightProbe[ 9 ];
 
@@ -59,6 +58,11 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 	struct DirectionalLight {
 		vec3 direction;
 		vec3 color;
+
+		int shadow;
+		float shadowBias;
+		float shadowRadius;
+		vec2 shadowMapSize;
 	};
 
 	uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
@@ -81,6 +85,13 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		vec3 color;
 		float distance;
 		float decay;
+
+		int shadow;
+		float shadowBias;
+		float shadowRadius;
+		vec2 shadowMapSize;
+		float shadowCameraNear;
+		float shadowCameraFar;
 	};
 
 	uniform PointLight pointLights[ NUM_POINT_LIGHTS ];
@@ -112,12 +123,17 @@ vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
 		float decay;
 		float coneCos;
 		float penumbraCos;
+
+		int shadow;
+		float shadowBias;
+		float shadowRadius;
+		vec2 shadowMapSize;
 	};
 
 	uniform SpotLight spotLights[ NUM_SPOT_LIGHTS ];
 
 	// directLight is an out parameter as having it as a return value caused compiler errors on some devices
-	void getSpotDirectLightIrradiance( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight directLight ) {
+	void getSpotDirectLightIrradiance( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight directLight  ) {
 
 		vec3 lVector = spotLight.position - geometry.position;
 		directLight.direction = normalize( lVector );

@@ -1,60 +1,37 @@
-( function () {
+/**
+ * @author alteredq / http://alteredqualia.com/
+ */
 
-	class SceneUtils {
+THREE.SceneUtils = {
 
-		static createMeshesFromInstancedMesh( instancedMesh ) {
+	createMultiMaterialObject: function ( geometry, materials ) {
 
-			const group = new THREE.Group();
-			const count = instancedMesh.count;
-			const geometry = instancedMesh.geometry;
-			const material = instancedMesh.material;
+		var group = new THREE.Group();
 
-			for ( let i = 0; i < count; i ++ ) {
+		for ( var i = 0, l = materials.length; i < l; i ++ ) {
 
-				const mesh = new THREE.Mesh( geometry, material );
-				instancedMesh.getMatrixAt( i, mesh.matrix );
-				mesh.matrix.decompose( mesh.position, mesh.quaternion, mesh.scale );
-				group.add( mesh );
-
-			}
-
-			group.copy( instancedMesh );
-			group.updateMatrixWorld(); // ensure correct world matrices of meshes
-
-			return group;
+			group.add( new THREE.Mesh( geometry, materials[ i ] ) );
 
 		}
 
-		static createMultiMaterialObject( geometry, materials ) {
+		return group;
 
-			const group = new THREE.Group();
+	},
 
-			for ( let i = 0, l = materials.length; i < l; i ++ ) {
+	detach: function ( child, parent, scene ) {
 
-				group.add( new THREE.Mesh( geometry, materials[ i ] ) );
+		console.warn( 'THREE.SceneUtils: detach() has been deprecated. Use scene.attach( child ) instead.' );
 
-			}
+		scene.attach( child );
 
-			return group;
+	},
 
-		}
+	attach: function ( child, scene, parent ) {
 
-		static detach( child, parent, scene ) {
+		console.warn( 'THREE.SceneUtils: attach() has been deprecated. Use parent.attach( child ) instead.' );
 
-			console.warn( 'THREE.SceneUtils: detach() has been deprecated. Use scene.attach( child ) instead.' );
-			scene.attach( child );
-
-		}
-
-		static attach( child, scene, parent ) {
-
-			console.warn( 'THREE.SceneUtils: attach() has been deprecated. Use parent.attach( child ) instead.' );
-			parent.attach( child );
-
-		}
+		parent.attach( child );
 
 	}
 
-	THREE.SceneUtils = SceneUtils;
-
-} )();
+};

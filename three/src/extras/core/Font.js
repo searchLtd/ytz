@@ -1,21 +1,31 @@
+/**
+ * @author zz85 / http://www.lab4games.net/zz85/blog
+ * @author mrdoob / http://mrdoob.com/
+ */
+
 import { ShapePath } from './ShapePath.js';
 
-class Font {
 
-	constructor( data ) {
+function Font( data ) {
 
-		this.type = 'Font';
+	this.type = 'Font';
 
-		this.data = data;
+	this.data = data;
 
-	}
+}
 
-	generateShapes( text, size = 100 ) {
+Object.assign( Font.prototype, {
 
-		const shapes = [];
-		const paths = createPaths( text, size, this.data );
+	isFont: true,
 
-		for ( let p = 0, pl = paths.length; p < pl; p ++ ) {
+	generateShapes: function ( text, size ) {
+
+		if ( size === undefined ) size = 100;
+
+		var shapes = [];
+		var paths = createPaths( text, size, this.data );
+
+		for ( var p = 0, pl = paths.length; p < pl; p ++ ) {
 
 			Array.prototype.push.apply( shapes, paths[ p ].toShapes() );
 
@@ -25,21 +35,21 @@ class Font {
 
 	}
 
-}
+} );
 
 function createPaths( text, size, data ) {
 
-	const chars = Array.from( text );
-	const scale = size / data.resolution;
-	const line_height = ( data.boundingBox.yMax - data.boundingBox.yMin + data.underlineThickness ) * scale;
+	var chars = Array.from ? Array.from( text ) : String( text ).split( '' ); // see #13988
+	var scale = size / data.resolution;
+	var line_height = ( data.boundingBox.yMax - data.boundingBox.yMin + data.underlineThickness ) * scale;
 
-	const paths = [];
+	var paths = [];
 
-	let offsetX = 0, offsetY = 0;
+	var offsetX = 0, offsetY = 0;
 
-	for ( let i = 0; i < chars.length; i ++ ) {
+	for ( var i = 0; i < chars.length; i ++ ) {
 
-		const char = chars[ i ];
+		var char = chars[ i ];
 
 		if ( char === '\n' ) {
 
@@ -48,7 +58,7 @@ function createPaths( text, size, data ) {
 
 		} else {
 
-			const ret = createPath( char, scale, offsetX, offsetY, data );
+			var ret = createPath( char, scale, offsetX, offsetY, data );
 			offsetX += ret.offsetX;
 			paths.push( ret.path );
 
@@ -62,7 +72,7 @@ function createPaths( text, size, data ) {
 
 function createPath( char, scale, offsetX, offsetY, data ) {
 
-	const glyph = data.glyphs[ char ] || data.glyphs[ '?' ];
+	var glyph = data.glyphs[ char ] || data.glyphs[ '?' ];
 
 	if ( ! glyph ) {
 
@@ -72,17 +82,17 @@ function createPath( char, scale, offsetX, offsetY, data ) {
 
 	}
 
-	const path = new ShapePath();
+	var path = new ShapePath();
 
-	let x, y, cpx, cpy, cpx1, cpy1, cpx2, cpy2;
+	var x, y, cpx, cpy, cpx1, cpy1, cpx2, cpy2;
 
 	if ( glyph.o ) {
 
-		const outline = glyph._cachedOutline || ( glyph._cachedOutline = glyph.o.split( ' ' ) );
+		var outline = glyph._cachedOutline || ( glyph._cachedOutline = glyph.o.split( ' ' ) );
 
-		for ( let i = 0, l = outline.length; i < l; ) {
+		for ( var i = 0, l = outline.length; i < l; ) {
 
-			const action = outline[ i ++ ];
+			var action = outline[ i ++ ];
 
 			switch ( action ) {
 
@@ -137,7 +147,5 @@ function createPath( char, scale, offsetX, offsetY, data ) {
 	return { offsetX: glyph.ha * scale, path: path };
 
 }
-
-Font.prototype.isFont = true;
 
 export { Font };

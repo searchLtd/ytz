@@ -1,62 +1,65 @@
 import { Vector3 } from '../math/Vector3.js';
 import { Object3D } from '../core/Object3D.js';
 
-const _v1 = /*@__PURE__*/ new Vector3();
-const _v2 = /*@__PURE__*/ new Vector3();
+/**
+ * @author mikael emtinger / http://gomo.se/
+ * @author alteredq / http://alteredqualia.com/
+ * @author mrdoob / http://mrdoob.com/
+ */
 
-class LOD extends Object3D {
+var _v1 = new Vector3();
+var _v2 = new Vector3();
 
-	constructor() {
+function LOD() {
 
-		super();
+	Object3D.call( this );
 
-		this._currentLevel = 0;
+	this.type = 'LOD';
 
-		this.type = 'LOD';
+	Object.defineProperties( this, {
+		levels: {
+			enumerable: true,
+			value: []
+		}
+	} );
 
-		Object.defineProperties( this, {
-			levels: {
-				enumerable: true,
-				value: []
-			},
-			isLOD: {
-				value: true,
-			}
-		} );
+	this.autoUpdate = true;
 
-		this.autoUpdate = true;
+}
 
-	}
+LOD.prototype = Object.assign( Object.create( Object3D.prototype ), {
 
-	copy( source ) {
+	constructor: LOD,
 
-		super.copy( source, false );
+	isLOD: true,
 
-		const levels = source.levels;
+	copy: function ( source ) {
 
-		for ( let i = 0, l = levels.length; i < l; i ++ ) {
+		Object3D.prototype.copy.call( this, source, false );
 
-			const level = levels[ i ];
+		var levels = source.levels;
+
+		for ( var i = 0, l = levels.length; i < l; i ++ ) {
+
+			var level = levels[ i ];
 
 			this.addLevel( level.object.clone(), level.distance );
 
 		}
 
-		this.autoUpdate = source.autoUpdate;
-
 		return this;
 
-	}
+	},
 
-	addLevel( object, distance = 0 ) {
+	addLevel: function ( object, distance ) {
+
+		if ( distance === undefined ) distance = 0;
 
 		distance = Math.abs( distance );
 
-		const levels = this.levels;
+		var levels = this.levels;
 
-		let l;
-
-		for ( l = 0; l < levels.length; l ++ ) {
+		for ( var l = 0; l < levels.length; l ++ ) {
 
 			if ( distance < levels[ l ].distance ) {
 
@@ -72,72 +75,50 @@ class LOD extends Object3D {
 
 		return this;
 
-	}
+	},
 
-	getCurrentLevel() {
+	getObjectForDistance: function ( distance ) {
 
-		return this._currentLevel;
+		var levels = this.levels;
 
-	}
+		for ( var i = 1, l = levels.length; i < l; i ++ ) {
 
-	getObjectForDistance( distance ) {
+			if ( distance < levels[ i ].distance ) {
 
-		const levels = this.levels;
-
-		if ( levels.length > 0 ) {
-
-			let i, l;
-
-			for ( i = 1, l = levels.length; i < l; i ++ ) {
-
-				if ( distance < levels[ i ].distance ) {
-
-					break;
-
-				}
+				break;
 
 			}
 
-			return levels[ i - 1 ].object;
-
 		}
 
-		return null;
+		return levels[ i - 1 ].object;
 
-	}
+	},
 
-	raycast( raycaster, intersects ) {
+	raycast: function ( raycaster, intersects ) {
 
-		const levels = this.levels;
+		_v1.setFromMatrixPosition( this.matrixWorld );
 
-		if ( levels.length > 0 ) {
+		var distance = raycaster.ray.origin.distanceTo( _v1 );
 
-			_v1.setFromMatrixPosition( this.matrixWorld );
+		this.getObjectForDistance( distance ).raycast( raycaster, intersects );
 
-			const distance = raycaster.ray.origin.distanceTo( _v1 );
+	},
 
-			this.getObjectForDistance( distance ).raycast( raycaster, intersects );
+	update: function ( camera ) {
 
-		}
-
-	}
-
-	update( camera ) {
-
-		const levels = this.levels;
+		var levels = this.levels;
 
 		if ( levels.length > 1 ) {
 
 			_v1.setFromMatrixPosition( camera.matrixWorld );
 			_v2.setFromMatrixPosition( this.matrixWorld );
 
-			const distance = _v1.distanceTo( _v2 ) / camera.zoom;
+			var distance = _v1.distanceTo( _v2 );
 
 			levels[ 0 ].object.visible = true;
 
-			let i, l;
-
-			for ( i = 1, l = levels.length; i < l; i ++ ) {
+			for ( var i = 1, l = levels.length; i < l; i ++ ) {
 
 				if ( distance >= levels[ i ].distance ) {
 
@@ -152,8 +133,6 @@ class LOD extends Object3D {
 
 			}
 
-			this._currentLevel = i - 1;
-
 			for ( ; i < l; i ++ ) {
 
 				levels[ i ].object.visible = false;
@@ -162,21 +141,19 @@ class LOD extends Object3D {
 
 		}
 
-	}
+	},
 
-	toJSON( meta ) {
+	toJSON: function ( meta ) {
 
-		const data = super.toJSON( meta );
-
-		if ( this.autoUpdate === false ) data.object.autoUpdate = false;
+		var data = Object3D.prototype.toJSON.call( this, meta );
 
 		data.object.levels = [];
 
-		const levels = this.levels;
+		var levels = this.levels;
 
-		for ( let i = 0, l = levels.length; i < l; i ++ ) {
+		for ( var i = 0, l = levels.length; i < l; i ++ ) {
 
-			const level = levels[ i ];
+			var level = levels[ i ];
 
 			data.object.levels.push( {
 				object: level.object.uuid,
@@ -189,7 +166,7 @@ class LOD extends Object3D {
 
 	}
 
-}
+} );
 
 
 export { LOD };

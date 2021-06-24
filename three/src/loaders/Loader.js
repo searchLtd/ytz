@@ -1,70 +1,82 @@
 import { DefaultLoadingManager } from './LoadingManager.js';
 
-class Loader {
+/**
+ * @author alteredq / http://alteredqualia.com/
+ */
 
-	constructor( manager ) {
+function Loader( manager ) {
 
-		this.manager = ( manager !== undefined ) ? manager : DefaultLoadingManager;
+	this.manager = ( manager !== undefined ) ? manager : DefaultLoadingManager;
 
-		this.crossOrigin = 'anonymous';
-		this.withCredentials = false;
-		this.path = '';
-		this.resourcePath = '';
-		this.requestHeader = {};
+	this.crossOrigin = 'anonymous';
+	this.path = '';
+	this.resourcePath = '';
 
-	}
+}
 
-	load( /* url, onLoad, onProgress, onError */ ) {}
+Object.assign( Loader.prototype, {
 
-	loadAsync( url, onProgress ) {
+	load: function ( /* url, onLoad, onProgress, onError */ ) {},
 
-		const scope = this;
+	parse: function ( /* data */ ) {},
 
-		return new Promise( function ( resolve, reject ) {
-
-			scope.load( url, resolve, onProgress, reject );
-
-		} );
-
-	}
-
-	parse( /* data */ ) {}
-
-	setCrossOrigin( crossOrigin ) {
+	setCrossOrigin: function ( crossOrigin ) {
 
 		this.crossOrigin = crossOrigin;
 		return this;
 
-	}
+	},
 
-	setWithCredentials( value ) {
-
-		this.withCredentials = value;
-		return this;
-
-	}
-
-	setPath( path ) {
+	setPath: function ( path ) {
 
 		this.path = path;
 		return this;
 
-	}
+	},
 
-	setResourcePath( resourcePath ) {
+	setResourcePath: function ( resourcePath ) {
 
 		this.resourcePath = resourcePath;
 		return this;
 
 	}
 
-	setRequestHeader( requestHeader ) {
+} );
 
-		this.requestHeader = requestHeader;
-		return this;
+//
+
+Loader.Handlers = {
+
+	handlers: [],
+
+	add: function ( regex, loader ) {
+
+		this.handlers.push( regex, loader );
+
+	},
+
+	get: function ( file ) {
+
+		var handlers = this.handlers;
+
+		for ( var i = 0, l = handlers.length; i < l; i += 2 ) {
+
+			var regex = handlers[ i ];
+			var loader = handlers[ i + 1 ];
+
+			if ( regex.test( file ) ) {
+
+				return loader;
+
+			}
+
+		}
+
+		return null;
 
 	}
 
-}
+};
+
 
 export { Loader };
