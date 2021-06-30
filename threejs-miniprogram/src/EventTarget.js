@@ -63,20 +63,29 @@ export default class EventTarget {
     }
 
     dispatchEvent(event = {}) {
-        if (typeof event.preventDefault !== 'function') {
-            event.preventDefault = () => {}
-        }
-        if (typeof event.stopPropagation !== 'function') {
-            event.stopPropagation = () => {}
-        }
-        const listeners = _events.get(this)[event.type]
+        // const listeners = _events.get(this)[event.type]
 
-        if (listeners) {
-            for (let i = 0; i < listeners.length; i++) {
-                listeners[i](event)
-            }
-        }
+        // if (listeners) {
+        //     for (let i = 0; i < listeners.length; i++) {
+        //         listeners[i](event)
+        //     }
+        // }
     }
+    // dispatchEvent(event = {}) {
+    //     if (typeof event.preventDefault !== 'function') {
+    //         event.preventDefault = () => {}
+    //     }
+    //     if (typeof event.stopPropagation !== 'function') {
+    //         event.stopPropagation = () => {}
+    //     }
+    //     const listeners = _events.get(this)[event.type]
+
+    //     if (listeners) {
+    //         for (let i = 0; i < listeners.length; i++) {
+    //             listeners[i](event)
+    //         }
+    //     }
+    // }
 
     dispatchTouchEvent(e = {}) {
         const target = {
